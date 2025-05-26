@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { MessageSquare } from "lucide-react" // Import MessageSquare here
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useParams } from "next/navigation"
@@ -12,6 +13,15 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Send, Bot, User, X, UserIcon, LogOut, Trash2, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
 
 interface Message {
   id: string
@@ -68,6 +78,30 @@ const DEMO_ASSISTANTS = [
     description: "Experto en diseño de experiencia de usuario, interfaces.",
     model: "gpt-4o",
   },
+  {
+    id: "asst_demo_7",
+    name: "Traductor Multiidioma",
+    description: "Especialista en traducción y localización para múltiples idiomas.",
+    model: "gpt-4o",
+  },
+  {
+    id: "asst_demo_8",
+    name: "Consultor Financiero",
+    description: "Experto en finanzas personales, inversiones, presupuestos.",
+    model: "gpt-4o-mini",
+  },
+  {
+    id: "asst_demo_9",
+    name: "Chef Virtual",
+    description: "Especialista en cocina, recetas, técnicas culinarias.",
+    model: "gpt-4o",
+  },
+  {
+    id: "asst_demo_10",
+    name: "Entrenador Personal",
+    description: "Experto en fitness, rutinas de ejercicio, nutrición deportiva.",
+    model: "gpt-4o-mini",
+  },
 ]
 
 // Respuestas demo por tipo de asistente
@@ -107,6 +141,30 @@ const DEMO_RESPONSES: Record<string, string[]> = {
     "El diseño centrado en el usuario es clave. Siempre pregúntate: ¿esto resuelve un problema real del usuario? ¿Es intuitivo y accesible?",
     "Para prototipos, Figma es excelente. Comienza con wireframes de baja fidelidad y ve añadiendo detalles progresivamente.",
     "La jerarquía visual guía al usuario. Usa tamaño, color y espaciado para dirigir la atención hacia los elementos más importantes.",
+  ],
+  asst_demo_7: [
+    "¡Hola! Soy tu traductor multiidioma. Puedo ayudarte con traducciones precisas, localización cultural y adaptación de contenido. ¿Qué necesitas traducir?",
+    "La traducción no es solo cambiar palabras, sino adaptar el mensaje cultural. ¿En qué contexto se usará esta traducción?",
+    "Para traducciones técnicas, es importante mantener la terminología específica del sector. ¿Tienes un glosario de referencia?",
+    "La localización incluye adaptar fechas, monedas, referencias culturales y humor. ¿Para qué mercado específico es esta traducción?",
+  ],
+  asst_demo_8: [
+    "¡Hola! Soy tu consultor financiero. Puedo ayudarte con presupuestos, inversiones, planificación financiera y análisis de gastos. ¿Cuál es tu objetivo financiero?",
+    "Para crear un presupuesto efectivo, usa la regla 50/30/20: 50% necesidades, 30% deseos, 20% ahorros e inversiones.",
+    "La diversificación es clave en inversiones. No pongas todos los huevos en una canasta. ¿Cuál es tu tolerancia al riesgo?",
+    "Para el fondo de emergencia, recomiendo tener entre 3-6 meses de gastos guardados en una cuenta de fácil acceso.",
+  ],
+  asst_demo_9: [
+    "¡Hola! Soy tu chef virtual. Puedo ayudarte con recetas, técnicas culinarias, sustituciones de ingredientes y planificación de menús. ¿Qué quieres cocinar?",
+    "Para una buena sazón, prueba mientras cocinas y ajusta gradualmente. La sal realza otros sabores, pero úsala con moderación.",
+    "La mise en place (tener todo preparado) es fundamental. Corta, mide y organiza todos los ingredientes antes de empezar a cocinar.",
+    "Para carnes jugosas, deja que alcancen temperatura ambiente antes de cocinar y déjalas reposar después para redistribuir los jugos.",
+  ],
+  asst_demo_10: [
+    "¡Hola! Soy tu entrenador personal. Puedo ayudarte con rutinas de ejercicio, nutrición deportiva, técnicas de entrenamiento y motivación. ¿Cuál es tu objetivo fitness?",
+    "Para principiantes, recomiendo empezar con 3 días de entrenamiento por semana, combinando cardio y fuerza. La consistencia es más importante que la intensidad.",
+    "La progresión gradual previene lesiones. Aumenta peso, repeticiones o intensidad solo cuando puedas completar todas las series con buena forma.",
+    "La recuperación es tan importante como el entrenamiento. Asegúrate de dormir 7-9 horas y tener al menos un día de descanso entre entrenamientos intensos.",
   ],
 }
 
@@ -258,6 +316,10 @@ export default function ChatPage() {
     router.push(`/chat/history/${sessionId}`)
   }
 
+  const handleSelectAssistant = (assistantId: string) => {
+    router.push(`/chat/${assistantId}`)
+  }
+
   const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     const allHistory = JSON.parse(localStorage.getItem("chat_history") || "[]")
@@ -328,10 +390,44 @@ export default function ChatPage() {
             </Button>
           </div>
 
-          <Button className="w-full justify-start" onClick={handleBackToDashboard}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva conversación
-          </Button>
+          {/* Dropdown de Asistentes */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="w-full justify-between">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  <span>Nueva conversación</span>
+                </div>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80" align="start">
+              <DropdownMenuLabel>Selecciona un asistente</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {DEMO_ASSISTANTS.map((assistantOption) => (
+                <DropdownMenuItem
+                  key={assistantOption.id}
+                  className="flex items-start gap-3 p-3 cursor-pointer"
+                  onClick={() => handleSelectAssistant(assistantOption.id)}
+                >
+                  <Bot className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {assistantOption.name}
+                      </p>
+                      <Badge variant="secondary" className="text-xs">
+                        {assistantOption.model}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                      {assistantOption.description}
+                    </p>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Lista de Conversaciones */}
@@ -342,7 +438,7 @@ export default function ChatPage() {
           <ScrollArea className="flex-1 px-4">
             {chatHistory.length === 0 ? (
               <div className="text-center py-8">
-                <Bot className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                <MessageSquare className="w-8 h-8 mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">No hay conversaciones</p>
               </div>
             ) : (
