@@ -5,13 +5,21 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bot, MessageSquare, LogOut, UserIcon, Trash2, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown } from "lucide-react"
 
 interface Assistant {
   id: string
@@ -88,6 +96,34 @@ const DEMO_ASSISTANTS: Assistant[] = [
     description: "Experto en diseño de experiencia de usuario, interfaces, prototipado y usabilidad.",
     model: "gpt-4o",
     created_at: Date.now() - 518400000,
+  },
+  {
+    id: "asst_demo_7",
+    name: "Traductor Multiidioma",
+    description: "Especialista en traducción y localización para múltiples idiomas y culturas.",
+    model: "gpt-4o",
+    created_at: Date.now() - 604800000,
+  },
+  {
+    id: "asst_demo_8",
+    name: "Consultor Financiero",
+    description: "Experto en finanzas personales, inversiones, presupuestos y planificación financiera.",
+    model: "gpt-4o-mini",
+    created_at: Date.now() - 691200000,
+  },
+  {
+    id: "asst_demo_9",
+    name: "Chef Virtual",
+    description: "Especialista en cocina, recetas, técnicas culinarias y nutrición.",
+    model: "gpt-4o",
+    created_at: Date.now() - 777600000,
+  },
+  {
+    id: "asst_demo_10",
+    name: "Entrenador Personal",
+    description: "Experto en fitness, rutinas de ejercicio, nutrición deportiva y bienestar.",
+    model: "gpt-4o-mini",
+    created_at: Date.now() - 864000000,
   },
 ]
 
@@ -194,19 +230,8 @@ export default function DashboardPage() {
         {/* Main Content Skeleton */}
         <div className="flex-1 p-6">
           <Skeleton className="h-8 w-48 mb-8" />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-10 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Skeleton className="h-12 w-64 mb-4" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     )
@@ -232,16 +257,40 @@ export default function DashboardPage() {
             </Button>
           </div>
 
-          <Button
-            className="w-full justify-start"
-            onClick={() => {
-              /* Scroll to assistants */
-              document.getElementById("assistants-section")?.scrollIntoView({ behavior: "smooth" })
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva conversación
-          </Button>
+          {/* Dropdown de Asistentes */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="w-full justify-between">
+                <div className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  <span>Nueva conversación</span>
+                </div>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80" align="start">
+              <DropdownMenuLabel>Selecciona un asistente</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {assistants.map((assistant) => (
+                <DropdownMenuItem
+                  key={assistant.id}
+                  className="flex items-start gap-3 p-3 cursor-pointer"
+                  onClick={() => handleSelectAssistant(assistant.id)}
+                >
+                  <Bot className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{assistant.name}</p>
+                      <Badge variant="secondary" className="text-xs">
+                        {assistant.model}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{assistant.description}</p>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Lista de Conversaciones */}
@@ -310,36 +359,42 @@ export default function DashboardPage() {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mis Asistentes</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard de Asistentes</h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Selecciona un asistente para comenzar una nueva conversación
+                Usa el botón "Nueva conversación" en el sidebar para seleccionar un asistente y comenzar a chatear
               </p>
             </div>
           </div>
         </div>
 
-        {/* Grid de Asistentes */}
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-4xl mx-auto p-6" id="assistants-section">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {assistants.map((assistant) => (
-                <Card key={assistant.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Bot className="w-8 h-8 text-blue-600 mb-2" />
-                      <Badge variant="secondary">{assistant.model}</Badge>
-                    </div>
-                    <CardTitle className="text-lg">{assistant.name}</CardTitle>
-                    <CardDescription className="line-clamp-3">{assistant.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full" onClick={() => handleSelectAssistant(assistant.id)}>
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Seleccionar
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Área Principal */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="w-24 h-24 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Bot className="w-12 h-12 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">¡Bienvenido a tu Dashboard!</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              Tienes <strong>{assistants.length} asistentes</strong> disponibles para ayudarte con diferentes tareas.
+              Selecciona "Nueva conversación" en el sidebar para comenzar.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="font-semibold text-gray-900 dark:text-white">{assistants.length}</div>
+                <div className="text-gray-600 dark:text-gray-400">Asistentes</div>
+              </div>
+              <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="font-semibold text-gray-900 dark:text-white">{chatHistory.length}</div>
+                <div className="text-gray-600 dark:text-gray-400">Conversaciones</div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <strong>💡 Tip:</strong> Puedes acceder a tus conversaciones anteriores desde el historial en el sidebar
+                izquierdo.
+              </p>
             </div>
           </div>
         </div>
