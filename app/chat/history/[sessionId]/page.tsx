@@ -11,6 +11,14 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Bot, User, UserIcon, LogOut, Trash2, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { ChevronDown, History } from "lucide-react"
 
 interface Message {
   id: string
@@ -151,62 +159,105 @@ export default function HistoryChatPage() {
             </Button>
           </div>
 
-          <Button className="w-full justify-start" onClick={handleBackToDashboard}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nueva conversación
-          </Button>
+          {/* Dropdown de Historial */}
+          <div className="space-y-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    <span>Historial ({chatHistory.length})</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80" align="start">
+                {chatHistory.length === 0 ? (
+                  <DropdownMenuItem disabled>
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Bot className="w-4 h-4" />
+                      <span>No hay conversaciones</span>
+                    </div>
+                  </DropdownMenuItem>
+                ) : (
+                  <>
+                    {chatHistory.slice(0, 10).map((session) => (
+                      <DropdownMenuItem
+                        key={session.id}
+                        className={`flex items-start justify-between p-3 cursor-pointer ${
+                          selectedSession?.id === session.id ? "bg-blue-50 dark:bg-blue-900/30" : ""
+                        }`}
+                        onClick={() => handleSelectChat(session.id)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Bot className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                              {session.assistantName}
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-1">
+                            {getPreviewText(session.messages)}
+                          </p>
+                          <p className="text-xs text-gray-500">{formatDate(session.createdAt)}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 ml-2"
+                          onClick={(e) => handleDeleteSession(session.id, e)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </DropdownMenuItem>
+                    ))}
+                    {chatHistory.length > 10 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem disabled className="text-center text-xs text-gray-500">
+                          Mostrando 10 de {chatHistory.length} conversaciones
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button className="w-full justify-start" onClick={handleBackToDashboard}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nueva conversación
+            </Button>
+          </div>
         </div>
 
-        {/* Lista de Conversaciones */}
-        <div className="flex-1 overflow-hidden">
-          <div className="p-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Conversaciones recientes</h3>
-          </div>
-          <ScrollArea className="flex-1 px-4">
-            {chatHistory.length === 0 ? (
-              <div className="text-center py-8">
-                <Bot className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">No hay conversaciones</p>
+        {/* Chat seleccionado info */}
+        <div className="flex-1 p-4">
+          {selectedSession && (
+            <div className="space-y-4">
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bot className="w-4 h-4 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-800 dark:text-orange-200">Solo Lectura</span>
+                </div>
+                <p className="text-xs text-orange-700 dark:text-orange-300">
+                  Viendo conversación con {selectedSession.assistantName}
+                </p>
+                <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                  {selectedSession.messages.length} mensaje{selectedSession.messages.length !== 1 ? "s" : ""} •{" "}
+                  {formatDate(selectedSession.createdAt)}
+                </p>
               </div>
-            ) : (
-              <div className="space-y-2 pb-4">
-                {chatHistory.map((session) => (
-                  <div
-                    key={session.id}
-                    className={`group p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedSession?.id === session.id
-                        ? "bg-blue-100 dark:bg-blue-900/30"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-700"
-                    }`}
-                    onClick={() => handleSelectChat(session.id)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Bot className="w-3 h-3 text-blue-600 flex-shrink-0" />
-                          <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                            {session.assistantName}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-1">
-                          {getPreviewText(session.messages)}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">{formatDate(session.createdAt)}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={(e) => handleDeleteSession(session.id, e)}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bot className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Modo Demo</span>
+                </div>
+                <p className="text-xs text-blue-700 dark:text-blue-300">Esta conversación fue generada en modo demo.</p>
               </div>
-            )}
-          </ScrollArea>
+            </div>
+          )}
         </div>
       </div>
 
